@@ -48,14 +48,11 @@ public class MapReduceConfig {
         init();
     }
 
-
-
     private void init(){
         try {
             properties.load(loader.getResource(path).getInputStream());
         } catch (IOException e) {
             LOG.error("error loading properties from {}, message: {}", path, e.getMessage());
-            System.exit(-1);
         }
     }
 
@@ -74,7 +71,6 @@ public class MapReduceConfig {
 
         } catch (IOException e) {
             LOG.error("error reading from {}, message {}", path, e.getMessage());
-            System.exit(-1);
         }
 
         return buffer.toString();

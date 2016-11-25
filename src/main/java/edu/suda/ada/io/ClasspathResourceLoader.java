@@ -10,8 +10,7 @@ import java.io.IOException;
 /**
  * @author leon.
  */
-@Component
-@Scope("singleton")
+
 public class ClasspathResourceLoader implements ResourceLoader {
 
     private Class<?> clazz;

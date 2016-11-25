@@ -39,6 +39,7 @@
     </root>
 
     <logger level="INFO" name="org.springframework.web.servlet.DispatcherServlet"/>
+    <logger level="INFO" name="blockcontainer"/>
     <logger level="DEBUG" name="general"/>
     <logger level="DEBUG" name="net"/>
     <logger level="INFO" name="ethereum-service"/>
