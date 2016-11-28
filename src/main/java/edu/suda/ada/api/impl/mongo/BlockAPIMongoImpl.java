@@ -1,8 +1,8 @@
 package edu.suda.ada.api.impl.mongo;
 
 
-import edu.suda.ada.entity.PlainBlock;
-import edu.suda.ada.entity.PlainTransaction;
+import edu.suda.ada.core.SimpleBlock;
+import edu.suda.ada.core.SimpleTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -19,48 +19,48 @@ public class BlockAPIMongoImpl implements BlockAPI {
     protected MongoTemplate mongoTemplate;
 
     @Override
-    public PlainBlock getBlockByHash(String hash) {
+    public SimpleBlock getBlockByHash(String hash) {
         return mongoTemplate.findOne(Query.query(Criteria.where("hash").is(hash)),
-                PlainBlock.class, BLOCK_COLLECTION);
+                SimpleBlock.class, BLOCK_COLLECTION);
     }
 
     @Override
-    public PlainBlock getBlockByNumber(long blockNumber) {
+    public SimpleBlock getBlockByNumber(long blockNumber) {
         return mongoTemplate.findOne(Query.query(Criteria.where("number").is(blockNumber)),
-                PlainBlock.class, BLOCK_COLLECTION);
+                SimpleBlock.class, BLOCK_COLLECTION);
     }
 
     @Override
-    public PlainBlock getBlockByTransaction(String txHash) {
-        PlainTransaction tx = mongoTemplate.findOne(
+    public SimpleBlock getBlockByTransaction(String txHash) {
+        SimpleTransaction tx = mongoTemplate.findOne(
                 Query.query(Criteria.where("hash").is(txHash)),
-                PlainTransaction.class,
+                SimpleTransaction.class,
                 TRANSACTION_COLLECTION
         );
 
         return mongoTemplate.findOne(
                 Query.query(Criteria.where("hash").is(tx.getBlockHash())),
-                PlainBlock.class,
+                SimpleBlock.class,
                 BLOCK_COLLECTION);
     }
 
     @Override
-    public List<PlainBlock> getBlocksByRange(int start, int end) {
+    public List<SimpleBlock> getBlocksByRange(int start, int end) {
        return getBlockRange(start, end, "number");
     }
 
     @Override
-    public List<PlainBlock> getBlocksByTimestamp(long start, long end) {
+    public List<SimpleBlock> getBlocksByTimestamp(long start, long end) {
         return getBlockRange(start, end, "timestamp");
     }
 
-    private List<PlainBlock> getBlockRange(long start, long end, String key){
+    private List<SimpleBlock> getBlockRange(long start, long end, String key){
         return mongoTemplate.find(
                 Query.query(new Criteria()
                             .andOperator(
                                 Criteria.where(key).gte(start),
                                 Criteria.where(key).lte(end))),
-                PlainBlock.class,
+                SimpleBlock.class,
                 BLOCK_COLLECTION
         );
     }

@@ -1,7 +1,7 @@
 package edu.suda.ada.api;
 
-import edu.suda.ada.entity.PlainTransaction;
-import edu.suda.ada.entity.TopKAccount;
+import edu.suda.ada.core.SimpleTransaction;
+import edu.suda.ada.core.TopKAccount;
 
 import java.util.List;
 
@@ -13,23 +13,23 @@ public interface TransactionAPI {
      *        ethereum supported api
      ====================================================*/
 
-    PlainTransaction getTransactionByHash(String hash);
-    List<PlainTransaction> getTransactionsByBlockHash(String hash);
-    List<PlainTransaction> getTransactionByBlockNumber(long blockNumber);
+    SimpleTransaction getTransactionByHash(String hash);
+    List<SimpleTransaction> getTransactionsByBlockHash(String hash);
+    List<SimpleTransaction> getTransactionByBlockNumber(long blockNumber);
 
     /**==================================================
      *       Entended api
      ====================================================*/
-    List<PlainTransaction> getTransactionsBySender(String sender);
-    List<PlainTransaction> getTransactionsByReceiver(String receiver);
-    List<PlainTransaction> getTransactionsRelatedWith(String address);
-    List<PlainTransaction> getTransactionsBetween(String addressA, String addressB);
+    List<SimpleTransaction> getTransactionsBySender(String sender);
+    List<SimpleTransaction> getTransactionsByReceiver(String receiver);
+    List<SimpleTransaction> getTransactionsRelatedWith(String address);
+    List<SimpleTransaction> getTransactionsBetween(String addressA, String addressB);
     /**==================================================
      *       Range query api
      ====================================================*/
-    List<PlainTransaction> getTransactionsOrderedByValue(int offset, int limit, boolean asc);
-    List<PlainTransaction> getTransactionsWithValueBetween(double min, double max, boolean asc);
-    List<PlainTransaction> getTransactionsBetweenBlocks(long start, long end);
+    List<SimpleTransaction> getTransactionsOrderedByValue(int offset, int limit, boolean asc);
+    List<SimpleTransaction> getTransactionsWithValueBetween(double min, double max, boolean asc);
+    List<SimpleTransaction> getTransactionsBetweenBlocks(long start, long end);
 
     /**==================================================
      *       Topk api

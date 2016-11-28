@@ -1,6 +1,6 @@
 package edu.suda.ada.ethereum;
 
-import edu.suda.ada.core.BlockContainer;
+import edu.suda.ada.core.BlockCache;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
 
@@ -8,9 +8,9 @@ public class EthereumBean {
 
     public static Ethereum ethereum;
 
-    private BlockContainer container;
+    private BlockCache container;
 
-    public EthereumBean(BlockContainer container){
+    public EthereumBean(BlockCache container){
         this.container = container;
     }
     public void start(){

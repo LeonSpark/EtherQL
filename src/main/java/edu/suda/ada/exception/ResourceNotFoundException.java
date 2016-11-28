@@ -1,11 +1,9 @@
 package edu.suda.ada.exception;
 
-import java.io.IOException;
-
 /**
- * @author leon.
+ * Created by LiYang on 2016/11/28.
  */
-public class ResourceNotFoundException extends IOException {
+public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {
         super(message);
     }
