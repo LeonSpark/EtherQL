@@ -55,3 +55,7 @@ mongo.db=test
 default.db=mongo
 data.location=/home/leon/data/ethereum
 ```
+
+## License
+
+EthereumSQL is licensed under [Apache License 2.0](http://www.apache.org/licenses/).
