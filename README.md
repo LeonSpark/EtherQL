@@ -2,7 +2,9 @@ EthereumSQL
 ----
 
 EthereumSQL is a query layer for Ethereum blockchain, written in Java and backed by MongoDB. 
+
 [![Build Status](https://travis-ci.org/LeonSpark/ethereumj-sql.svg?branch=master)](https://travis-ci.org/LeonSpark/ethereumj-sql)
+
 It provides a RESTful API that is ideal for building scalable web applications or analyzing blockchain data.
 EthereumSQL is designed to be fully compatible with [Ethereum](https://github.com/ethereum).
 
