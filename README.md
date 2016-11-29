@@ -12,8 +12,7 @@ For much of the core protocol logic, EthereumSQL makes use of the [EthereumJ](ht
 library.
 
 EthereumSQL was built at [Advanced Data Analytics Lab](http://ada.suda.edu.cn), with the goal of providing
-a data query infrastructure on Ethereum. It is currently in very alpha beta,
-and not recommended for production use until it has received sufficient testing.
+a data query infrastructure on Ethereum. It is currently in very alpha beta, and not recommended for production use until it has received sufficient testing.
 
 ## Installation
 
@@ -41,6 +40,7 @@ and not recommended for production use until it has received sufficient testing.
         </dependency>
 ```
 
+
 * Create a bean to activate the EtherSQL
 
 `<bean id="starter" class="edu.suda.ada.config.AppConfig"/>`
@@ -53,4 +53,5 @@ mongo.host=127.0.0.1
 mongo.port=27017
 mongo.db=test
 default.db=mongo
+data.location=/home/leon/data/ethereum
 ```
