@@ -95,7 +95,15 @@ public class AccountProcessor extends Processor {
             accountTemplate.addBalance(ByteUtil.toHexString(tx.getSender()),
                     ByteUtil.bytesToBigInteger(tx.getValue()).negate().doubleValue(), true);
 
-            String receiver = ByteUtil.toHexString(tx.getReceiveAddress());
+
+            String receiver;
+
+            if (!tx.isContractCreation()){
+                receiver = ByteUtil.toHexString(tx.getReceiveAddress());
+            }else {
+                receiver = ByteUtil.toHexString(tx.getContractAddress());
+            }
+
             double value = ByteUtil.bytesToBigInteger(tx.getValue()).doubleValue();
             createNewOrUpdate(receiver, value);
         }
