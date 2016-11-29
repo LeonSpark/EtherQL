@@ -4,6 +4,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ import java.util.List;
  */
 public class SimpleLog {
     private String address;
-    private List<String> topics;
+    private List<String> topics = new ArrayList<>();
     private String data;
 
     public SimpleLog(LogInfo logInfo) {

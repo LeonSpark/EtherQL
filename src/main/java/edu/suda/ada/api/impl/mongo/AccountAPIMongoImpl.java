@@ -47,6 +47,7 @@ public class AccountAPIMongoImpl implements AccountAPI {
     private List<SimpleAccount> execute(Query query) {
         return mongoTemplate.find(query, SimpleAccount.class, ACCOUNT_COLLECTION);
     }
+
     @Override
     public List<SimpleAccount> getAccountsByBalanceAsc(int offset, int limit) {
         return getAccountsByBalanceOrdered(offset, limit, true);

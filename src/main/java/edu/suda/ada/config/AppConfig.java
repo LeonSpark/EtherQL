@@ -6,12 +6,12 @@ import edu.suda.ada.handler.AccountProcessor;
 import edu.suda.ada.handler.BlockProcessor;
 import edu.suda.ada.handler.Processor;
 import edu.suda.ada.handler.TransactionProcessor;
-import edu.suda.ada.handler.cudr.AccountTemplate;
-import edu.suda.ada.handler.cudr.BlockTemplate;
-import edu.suda.ada.handler.cudr.TransactionTemplate;
-import edu.suda.ada.handler.cudr.impl.AccountTemplateMongoImpl;
-import edu.suda.ada.handler.cudr.impl.BlockTemplateMongoImpl;
-import edu.suda.ada.handler.cudr.impl.TransactionTemplateMongoImpl;
+import edu.suda.ada.dao.AccountTemplate;
+import edu.suda.ada.dao.BlockTemplate;
+import edu.suda.ada.dao.TransactionTemplate;
+import edu.suda.ada.dao.impl.mongo.AccountTemplateMongoImpl;
+import edu.suda.ada.dao.impl.mongo.BlockTemplateMongoImpl;
+import edu.suda.ada.dao.impl.mongo.TransactionTemplateMongoImpl;
 import edu.suda.ada.ethereum.EthereumBean;
 import org.springframework.context.annotation.*;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -112,14 +112,14 @@ public class AppConfig {
 
     @Bean
     @Scope("singleton")
-    public BlockCache blockContainer(){
+    public BlockCache blockCache(){
         return new BlockCache(processor());
     }
 
     @Bean
     @Scope("singleton")
     public EthereumBean ethereumBean(){
-        EthereumBean ethereumBean = new EthereumBean(blockContainer());
+        EthereumBean ethereumBean = new EthereumBean(blockCache());
         ethereumBean.start();
         return ethereumBean;
     }

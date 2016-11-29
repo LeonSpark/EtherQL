@@ -32,9 +32,8 @@ public class EthereumListener extends EthereumListenerAdapter {
 
     @Override
     public void onBlock(BlockSummary blockSummary) {
-        if (logger.isDebugEnabled()){
-            logger.debug("Receiving new block   [ number: {} ]", blockSummary.getBlock().getNumber());
-        }
+        logger.info("Receiving new block   [ number: {} ]", blockSummary.getBlock().getNumber());
+
         blockQueue.add(blockSummary);
     }
 

@@ -45,7 +45,7 @@ public class EthersqlConfig {
         this.config = javaSystemProperties
                 .withFallback(defaultConfig)
                 .withFallback(config.withFallback(userConfig));
-//        validateConfig();
+        validateConfig();
     }
 
     public EthersqlConfig(String configLocation){

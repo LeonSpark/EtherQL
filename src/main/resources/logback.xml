@@ -38,22 +38,23 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger level="INFO" name="org.springframework.web.servlet.DispatcherServlet"/>
-    <logger level="INFO" name="cache"/>
-    <logger level="DEBUG" name="general"/>
-    <logger level="DEBUG" name="net"/>
-    <logger level="INFO" name="ethereum-service"/>
+    <logger level="WARN" name="cache"/>
+    <logger level="ERROR" name="listener"/>
+    <logger level="ERROR" name="general"/>
+    <logger level="WARN" name="net"/>
+    <logger level="WARN" name="ethereum-service"/>
     <logger level="ERROR" name="wire"/>
-    <logger level="DEBUG" name="discover"/>
-    <logger level="DEBUG" name="db"/>
-    <logger level="TRACE" name="sync"/>
-    <logger level="DEBUG" name="jsonrpc"/>
+    <logger level="WARN" name="discover"/>
+    <logger level="WARN" name="db"/>
+    <logger level="ERROR" name="sync"/>
+    <logger level="WARN" name="jsonrpc"/>
+    <logger level="WARN" name="facade"/>
 
-    <logger level="DEBUG" name="blockqueue"/>
-    <logger level="INFO" name="repository"/>
-    <logger level="INFO" name="blockchain"/>
-    <logger level="DEBUG" name="mine"/>
-    <logger level="INFO" name="discover"/>
+    <logger level="WARN" name="blockqueue"/>
+    <logger level="WARN" name="repository"/>
+    <logger level="WARN" name="blockchain"/>
+    <logger level="WARN" name="mine"/>
+    <logger level="WARN" name="discover"/>
     <logger level="ERROR" name="java.nio"/>
     <logger level="ERROR" name="io.netty"/>
     <logger level="ERROR" name="wire"/>
@@ -62,6 +63,7 @@
     <logger level="ERROR" name="state"/>
     <logger level="ERROR" name="execute"/>
     <logger level="ERROR" name="rlp"/>
+    <logger level="INFO" name="processor"/>
 
 
 </configuration>

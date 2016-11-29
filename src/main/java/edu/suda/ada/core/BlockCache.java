@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BlockCache {
-    private final Logger logger = LoggerFactory.getLogger("cache");
+    private final Logger LOG = LoggerFactory.getLogger("cache");
     private KeyValueSource<Long, List<BlockState>> index;
     private KeyValueSource<String, BlockSummary> data;
     private BlockState bestBlock;
@@ -32,7 +32,6 @@ public class BlockCache {
      * @param summary
      */
     public void add(BlockSummary summary){
-        logger.info("add new block to block container, block number: [{}]", summary.getBlock().getNumber());
         Block block = summary.getBlock();
         BlockState state = new BlockState.StateBuilder()
                 .hash(ByteUtil.toHexString(block.getHash()))
@@ -45,8 +44,13 @@ public class BlockCache {
         data.put(state.getHash(), summary);
 
         if (!index.exist(block.getNumber())){
+            if (LOG.isInfoEnabled()){
+                LOG.info("Adding best block to block cache, number: {} ", state.getNumber());
+            }
             index.put(block.getNumber(), Collections.singletonList(state));
         } else {
+            LOG.warn("Forking occurs in block number : {}", state.getNumber());
+
             bestBlock.setMainChain(false);
             rebuildBranch(state);
             index.get(block.getNumber()).add(state);
@@ -63,7 +67,7 @@ public class BlockCache {
      * @param state newly add block state
      */
     private void rebuildBranch(BlockState state){
-        logger.info("rebuild main branch");
+        LOG.info("rebuild main branch");
         if (bestBlock.getNumber() == state.getNumber()){
             resetMainChain(state);
         }else {
@@ -110,20 +114,19 @@ public class BlockCache {
     }
 
     private void flush(){
-        logger.info("flushing to db");
-        long number = bestBlock.getNumber();
-        for (int i = 0; index.exist(number); i++){
-            if (i >= FLUSH_SIZE_LIMIT){
-                List<BlockState> states = index.get(number);
-                for (BlockState s : states){
-                    if (s.isMainChain()){
-                        blockProcessor.processBlock(data.get(s.getHash()));
-                    }
-
-                    data.delete(s.getHash());
+        LOG.info("flushing to db");
+        long number = bestBlock.getNumber() - FLUSH_SIZE_LIMIT;
+        while (index.exist(number)){
+            List<BlockState> states = index.get(number);
+            for (BlockState s : states){
+                if (s.isMainChain()){
+                    blockProcessor.processBlock(data.get(s.getHash()));
                 }
-                index.delete(number);
+
+                data.delete(s.getHash());
             }
+
+            index.delete(number);
             number--;
         }
     }

@@ -159,6 +159,7 @@ public class SimpleBlock {
         this.gasLimit = ByteUtil.byteArrayToLong(block.getGasLimit());
         this.gasUsed = block.getGasUsed();
         this.timestamp = block.getTimestamp();
+
         List<String> transactions = new ArrayList<>();
         for (Transaction tx : block.getTransactionsList()) {
             transactions.add(toJsonHex(tx.getHash()));

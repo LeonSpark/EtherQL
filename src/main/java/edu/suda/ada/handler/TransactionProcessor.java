@@ -2,17 +2,20 @@ package edu.suda.ada.handler;
 
 import edu.suda.ada.core.SimpleLog;
 import edu.suda.ada.core.SimpleTransaction;
-import edu.suda.ada.handler.cudr.LogTemplate;
-import edu.suda.ada.handler.cudr.TransactionTemplate;
+import edu.suda.ada.dao.LogTemplate;
+import edu.suda.ada.dao.TransactionTemplate;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.TransactionExecutionSummary;
+import org.ethereum.util.ByteUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class TransactionProcessor extends Processor {
+    private final Logger LOG = LoggerFactory.getLogger("processor");
 
     private TransactionTemplate transactionTemplate;
     private LogTemplate logTemplate;
@@ -26,8 +29,9 @@ public class TransactionProcessor extends Processor {
 
     @Override
     public void processBlock(BlockSummary blockSummary) {
+        String blockHash = ByteUtil.toHexString(blockSummary.getBlock().getHash());
         if (containsTransaction(blockSummary)){
-            blockSummary.getSummaries().forEach(this::handleTransaction);
+            blockSummary.getSummaries().forEach(summary -> handleTransaction(summary, blockHash));
         }
 
         successor.processBlock(blockSummary);
@@ -41,9 +45,15 @@ public class TransactionProcessor extends Processor {
      * TODO add log info
      * @param summary
      */
-    private void handleTransaction(TransactionExecutionSummary summary){
-        txs.add(new SimpleTransaction(summary));
-        logs.addAll(summary.getLogs().stream().map(SimpleLog::new).collect(Collectors.toList()));
+    private void handleTransaction(TransactionExecutionSummary summary, String blockHash){
+        SimpleTransaction tx = new SimpleTransaction(summary);
+        LOG.info("[Fee : {}]  [gasUsed : {}]  [gasLeftOver: {}]  [gasLimit : {}]" +
+                        "  [gasPrice : {}]   [ gasRefund:{}]",
+                summary.getFee(), summary.getGasUsed().longValue(),
+                summary.getGasLeftover(), summary.getGasLimit(),
+                summary.getGasPrice(), summary.getGasRefund());
+        tx.setBlockHash(blockHash);
+        txs.add(tx);
 
         transactionTemplate.saveTransactions(txs);
     }

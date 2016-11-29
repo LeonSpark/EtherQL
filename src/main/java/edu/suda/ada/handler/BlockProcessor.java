@@ -1,7 +1,7 @@
 package edu.suda.ada.handler;
 
 import edu.suda.ada.core.SimpleBlock;
-import edu.suda.ada.handler.cudr.BlockTemplate;
+import edu.suda.ada.dao.BlockTemplate;
 import org.ethereum.core.BlockSummary;
 
 public class BlockProcessor extends Processor {

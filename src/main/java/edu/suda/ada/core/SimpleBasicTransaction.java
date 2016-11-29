@@ -10,7 +10,7 @@ import org.ethereum.vm.program.InternalTransaction;
  */
 public class SimpleBasicTransaction {
     private String hash;
-    private double nonce;
+    private long nonce;
     private String blockHash;
     private String from;
     private String to;
@@ -27,14 +27,13 @@ public class SimpleBasicTransaction {
 
     public void setTransaction(Transaction tx){
         this.hash = TypeConverter.toJsonHex(tx.getHash());
-        this.nonce = ByteUtil.bytesToBigInteger(tx.getNonce()).doubleValue();
+        this.nonce = ByteUtil.byteArrayToLong(tx.getNonce());
         this.from = TypeConverter.toJsonHex(tx.getSender());
         this.to = tx.getReceiveAddress() == null ? "":TypeConverter.toJsonHex(tx.getReceiveAddress());
         this.value = ByteUtil.bytesToBigInteger(tx.getValue()).doubleValue();
         this.gasPrice = ByteUtil.byteArrayToLong(tx.getGasPrice());
         this.gasLimit = ByteUtil.byteArrayToLong(tx.getGasLimit());
         this.data = tx.getData() == null ? "":TypeConverter.toJsonHex(tx.getData());
-
     }
 
     public String getData() {
@@ -53,11 +52,11 @@ public class SimpleBasicTransaction {
         this.hash = hash;
     }
 
-    public double getNonce() {
+    public long getNonce() {
         return nonce;
     }
 
-    public void setNonce(double nonce) {
+    public void setNonce(long nonce) {
         this.nonce = nonce;
     }
 

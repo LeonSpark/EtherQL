@@ -1,21 +1,16 @@
 package edu.suda.ada.handler;
 
-import edu.suda.ada.handler.cudr.AccountTemplate;
+import edu.suda.ada.dao.AccountTemplate;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.InternalTransaction;
-import org.springframework.data.mongodb.core.query.Update;
 
-import javax.print.DocFlavor;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
 
 public class AccountProcessor extends Processor {
 
