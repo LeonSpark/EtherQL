@@ -9,52 +9,33 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class EthereumListener extends EthereumListenerAdapter {
 
     private final Logger logger = LoggerFactory.getLogger("listener");
     Ethereum ethereum;
 
-    public static final int MAX_QUEUE_SIZE = Integer.MAX_VALUE;
-    public static final int TIME_SLEEP_MILLISECONDS = 3000;
-    private BlockingQueue<BlockSummary> blockQueue = new LinkedBlockingDeque<>(MAX_QUEUE_SIZE);
+    public static final int MAX_QUEUE_SIZE = Short.MAX_VALUE;
+    private static long counter = 0;;
     private boolean syncDone = false;
-
     private BlockCache container;
-    private Thread blockProcessingThread;
-    private Runnable blockHandler = () -> processBlock();
 
     public EthereumListener(Ethereum ethereum, BlockCache container) {
         this.ethereum = ethereum;
         this.container = container;
-        init();
     }
 
     @Override
     public void onBlock(BlockSummary blockSummary) {
-        logger.info("Receiving new block   [ number: {} ]", blockSummary.getBlock().getNumber());
-
-        blockQueue.add(blockSummary);
-    }
-
-    private void init(){
-        blockProcessingThread = new Thread(blockHandler, "BlockProcessingThread");
-        blockProcessingThread.start();
-    }
-
-    public void processBlock(){
-        while (!Thread.interrupted()) {
-            try {
-                if (blockQueue.size() > 0){
-                    container.add(blockQueue.take());
-                }else {
-                    Thread.sleep(TIME_SLEEP_MILLISECONDS);
-                }
-            } catch (InterruptedException e) {
-                logger.error("BlockProcessingThread interrupted. message: [{}]", e.getMessage());
-            }
+        container.add(blockSummary);
+        if (++counter % 100 == 0){
+            logger.info("onBlock() received {} blocks,  Latest number : {}",
+                    counter, blockSummary.getBlock().getNumber());
         }
     }
+
+
     /**
      *  Mark the fact that you are touching
      *  the head of the chain

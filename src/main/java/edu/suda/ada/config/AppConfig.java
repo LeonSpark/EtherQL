@@ -1,6 +1,7 @@
 package edu.suda.ada.config;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import edu.suda.ada.core.*;
 import edu.suda.ada.handler.AccountProcessor;
 import edu.suda.ada.handler.BlockProcessor;
@@ -15,6 +16,7 @@ import edu.suda.ada.dao.impl.mongo.TransactionTemplateMongoImpl;
 import edu.suda.ada.ethereum.EthereumBean;
 import org.springframework.context.annotation.*;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -31,18 +33,18 @@ public class AppConfig {
 
     private EthersqlConfig config = EthersqlConfig.getDefaultConfig();
 
-    @Bean
-    @Lazy
-    public MongoTemplate mongoTemplate(){
+//    @Bean
+//    @Lazy
+//    @Scope("prototype")
+//    public MongoTemplate mongoTemplate(){
+//
+//        MappingMongoConverter converter =
+//                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
+//        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
+//        return new MongoTemplate(mongoDbFactory(), converter);
+//    }
 
-        MappingMongoConverter converter =
-                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
-        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
-        return new MongoTemplate(mongoDbFactory(), converter);
-    }
-
     @Bean
-    @Scope("singleton")
     @Lazy
     public MongoDbFactory mongoDbFactory(){
         return new SimpleMongoDbFactory(mongoClient(), config.getMongoDatabase());
@@ -56,31 +58,41 @@ public class AppConfig {
 
     @Bean
     public AccountTemplate accountTemplate(){
+        MappingMongoConverter converter =
+                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
+        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
+
         String defaultDb = config.getDefaultDB();
 
         switch (defaultDb){
-            case "mongo" : return new AccountTemplateMongoImpl(mongoTemplate());
-            case "mysql" : return new AccountTemplateMongoImpl(mongoTemplate());
+            case "mongo" : return new AccountTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
+            case "mysql" : return new AccountTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
             default: throw new RuntimeException("db should be mysql or mongo");
         }
     }
 
     @Bean
     public TransactionTemplate transactionTemplate(){
+        MappingMongoConverter converter =
+                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
+        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
         String defaultDb = config.getDefaultDB();
         switch (defaultDb){
-            case "mongo" : return new TransactionTemplateMongoImpl(mongoTemplate());
-            case "mysql" : return new TransactionTemplateMongoImpl(mongoTemplate());
+            case "mongo" : return new TransactionTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
+            case "mysql" : return new TransactionTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
             default: throw new RuntimeException("db should be mysql or mongo");
         }
     }
 
     @Bean
     public BlockTemplate blockTemplate(){
+        MappingMongoConverter converter =
+                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
+        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
         String defaultDb = config.getDefaultDB();
         switch (defaultDb){
-            case "mongo" : return new BlockTemplateMongoImpl(mongoTemplate());
-            case "mysql" : return new BlockTemplateMongoImpl(mongoTemplate());
+            case "mongo" : return new BlockTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
+            case "mysql" : return new BlockTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
             default: throw new RuntimeException("db should be mysql or mongo");
         }
     }
@@ -122,5 +134,10 @@ public class AppConfig {
         EthereumBean ethereumBean = new EthereumBean(blockCache());
         ethereumBean.start();
         return ethereumBean;
+    }
+
+    @Bean
+    public Initializer initializer(){
+        return new Initializer(accountTemplate());
     }
 }

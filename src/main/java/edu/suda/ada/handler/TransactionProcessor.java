@@ -1,8 +1,6 @@
 package edu.suda.ada.handler;
 
-import edu.suda.ada.core.SimpleLog;
 import edu.suda.ada.core.SimpleTransaction;
-import edu.suda.ada.dao.LogTemplate;
 import edu.suda.ada.dao.TransactionTemplate;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.core.TransactionExecutionSummary;
@@ -16,12 +14,9 @@ import java.util.Objects;
 
 public class TransactionProcessor extends Processor {
     private final Logger LOG = LoggerFactory.getLogger("processor");
-
     private TransactionTemplate transactionTemplate;
-    private LogTemplate logTemplate;
-
     private List<SimpleTransaction> txs = new ArrayList<>();
-    private List<SimpleLog> logs = new ArrayList<>();
+
 
     public TransactionProcessor(TransactionTemplate transactionTemplate){
         this.transactionTemplate = transactionTemplate;
@@ -29,16 +24,30 @@ public class TransactionProcessor extends Processor {
 
     @Override
     public void processBlock(BlockSummary blockSummary) {
+        long start = System.currentTimeMillis();
         String blockHash = ByteUtil.toHexString(blockSummary.getBlock().getHash());
+
         if (containsTransaction(blockSummary)){
             blockSummary.getSummaries().forEach(summary -> handleTransaction(summary, blockHash));
         }
-
+        long endTime = System.currentTimeMillis();
+        transactionTemplate.saveTransactions(txs);
+        txs.clear();
+        long end = System.currentTimeMillis();
+        try {
+            Thread.sleep(50000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (end - start > 5){
+            LOG.warn("Block number : {} Transaction processor takes : {} loop takes : {}",
+                    blockSummary.getBlock().getNumber(), end - start, endTime - start);
+        }
         successor.processBlock(blockSummary);
     }
 
     private boolean containsTransaction(BlockSummary blockSummary){
-        return Objects.nonNull(blockSummary.getSummaries()) && blockSummary.getSummaries().size() > 0;
+        return blockSummary.getSummaries() != null && blockSummary.getSummaries().size() > 0;
     }
 
     /**
@@ -47,14 +56,7 @@ public class TransactionProcessor extends Processor {
      */
     private void handleTransaction(TransactionExecutionSummary summary, String blockHash){
         SimpleTransaction tx = new SimpleTransaction(summary);
-        LOG.info("[Fee : {}]  [gasUsed : {}]  [gasLeftOver: {}]  [gasLimit : {}]" +
-                        "  [gasPrice : {}]   [ gasRefund:{}]",
-                summary.getFee(), summary.getGasUsed().longValue(),
-                summary.getGasLeftover(), summary.getGasLimit(),
-                summary.getGasPrice(), summary.getGasRefund());
         tx.setBlockHash(blockHash);
         txs.add(tx);
-
-        transactionTemplate.saveTransactions(txs);
     }
 }

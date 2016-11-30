@@ -34,13 +34,12 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger level="WARN" name="cache"/>
-    <logger level="ERROR" name="listener"/>
-    <logger level="ERROR" name="general"/>
+    <logger level="WARN" name="cache" />
+    <logger level="WARN" name="listener"/>
+    <logger level="WARN" name="general"/>
     <logger level="WARN" name="net"/>
     <logger level="WARN" name="ethereum-service"/>
     <logger level="ERROR" name="wire"/>
@@ -49,7 +48,6 @@
     <logger level="ERROR" name="sync"/>
     <logger level="WARN" name="jsonrpc"/>
     <logger level="WARN" name="facade"/>
-
     <logger level="WARN" name="blockqueue"/>
     <logger level="WARN" name="repository"/>
     <logger level="WARN" name="blockchain"/>
@@ -63,7 +61,8 @@
     <logger level="ERROR" name="state"/>
     <logger level="ERROR" name="execute"/>
     <logger level="ERROR" name="rlp"/>
-    <logger level="INFO" name="processor"/>
+    <logger level="WARN" name="processor">
 
+    </logger>
 
 </configuration>

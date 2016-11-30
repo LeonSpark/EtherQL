@@ -1,30 +1,48 @@
 package edu.suda.ada.core;
 
 import edu.suda.ada.handler.Processor;
+import org.apache.commons.logging.Log;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Queue;
+import java.util.concurrent.*;
 
 public class BlockCache {
     private final Logger LOG = LoggerFactory.getLogger("cache");
+
     private KeyValueSource<Long, List<BlockState>> index;
     private KeyValueSource<String, BlockSummary> data;
+    private BlockingQueue<BlockSummary> blockQueue = new LinkedBlockingDeque(Integer.MAX_VALUE);
+    private BlockingQueue<BlockSummary> toFlush = new LinkedBlockingDeque(Integer.MAX_VALUE);
     private BlockState bestBlock;
     private Processor blockProcessor;
 
-    public static int CACHE_SIZE = 12;
     public static int FLUSH_SIZE_LIMIT = 5;
+    private Thread blockCacheService;
+    private Runnable cacheBlockTask = () -> cacheBlock();
+    private Thread blockProcessService;
+    private Runnable blockProcessTask = () -> processBlock();
 
     public BlockCache(Processor blockProcessor){
         index = new KeyValueSource<>(new ConcurrentHashMap<>());
         data = new KeyValueSource<>(new ConcurrentHashMap<>());
         this.blockProcessor = blockProcessor;
+        init();
+    }
+
+    private void init(){
+        blockCacheService = new Thread(cacheBlockTask, "cacheBlocksThread");
+        blockCacheService.start();
+
+        blockProcessService = new Thread(blockProcessTask, "flushBlockThread");
+        blockProcessService.start();
     }
 
     /**
@@ -32,33 +50,66 @@ public class BlockCache {
      * @param summary
      */
     public void add(BlockSummary summary){
-        Block block = summary.getBlock();
-        BlockState state = new BlockState.StateBuilder()
-                .hash(ByteUtil.toHexString(block.getHash()))
-                .parentHash(ByteUtil.toHexString(block.getParentHash()))
-                .number(block.getNumber())
-                .mainChain(true)
-                .totalDifficulty(block.getCumulativeDifficulty())
-                .build();
-
-        data.put(state.getHash(), summary);
-
-        if (!index.exist(block.getNumber())){
-            if (LOG.isInfoEnabled()){
-                LOG.info("Adding best block to block cache, number: {} ", state.getNumber());
-            }
-            index.put(block.getNumber(), Collections.singletonList(state));
-        } else {
-            LOG.warn("Forking occurs in block number : {}", state.getNumber());
-
-            bestBlock.setMainChain(false);
-            rebuildBranch(state);
-            index.get(block.getNumber()).add(state);
+        try {
+            blockQueue.put(summary);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+    }
 
-        bestBlock = state;
-        if (index.size() >= CACHE_SIZE){
-            flush();
+    private void cacheBlock(){
+
+       while (!Thread.interrupted()){
+            try {
+                BlockSummary summary = blockQueue.take();
+                Block block = summary.getBlock();
+                BlockState state = new BlockState.StateBuilder()
+                        .hash(ByteUtil.toHexString(block.getHash()))
+                        .parentHash(ByteUtil.toHexString(block.getParentHash()))
+                        .number(block.getNumber())
+                        .mainChain(true)
+                        .totalDifficulty(block.getCumulativeDifficulty())
+                        .build();
+
+                data.put(state.getHash(), summary);
+
+                if (!index.exist(block.getNumber())){
+                    LOG.info("Adding best block to block cache, number: {} ", state.getNumber());
+
+                    index.put(block.getNumber(), Collections.singletonList(state));
+                } else {
+                    LOG.warn("Forking occurs in block number : {}", state.getNumber());
+
+                    bestBlock.setMainChain(false);
+                    rebuildBranch(state);
+                    index.get(block.getNumber()).add(state);
+                }
+
+                bestBlock = state;
+                if (index.size() > FLUSH_SIZE_LIMIT){
+                    toFlush();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void processBlock(){
+        while (!Thread.interrupted()){
+            try {
+
+                BlockSummary block = toFlush.take();
+                long start = System.currentTimeMillis();
+                blockProcessor.processBlock(block);
+                long end = System.currentTimeMillis();
+
+                LOG.warn("process block : {}, takes : {}  (flush queue size: {})",
+                        block.getBlock().getNumber(),  end - start, toFlush.size());
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -67,7 +118,6 @@ public class BlockCache {
      * @param state newly add block state
      */
     private void rebuildBranch(BlockState state){
-        LOG.info("rebuild main branch");
         if (bestBlock.getNumber() == state.getNumber()){
             resetMainChain(state);
         }else {
@@ -90,6 +140,10 @@ public class BlockCache {
         }
     }
 
+    /**
+     * reset the main chain when a fork takes place
+     * @param state
+     */
     private void resetMainChain(BlockState state){
         long number = bestBlock.getNumber() - 1;
         String mainChain = bestBlock.getParentHash();
@@ -113,21 +167,25 @@ public class BlockCache {
         }
     }
 
-    private void flush(){
-        LOG.info("flushing to db");
+    /**
+     * Add block to flushQueue
+     */
+    private void toFlush(){
         long number = bestBlock.getNumber() - FLUSH_SIZE_LIMIT;
-        while (index.exist(number)){
+
+        if (index.exist(number)){
             List<BlockState> states = index.get(number);
+
             for (BlockState s : states){
                 if (s.isMainChain()){
-                    blockProcessor.processBlock(data.get(s.getHash()));
+                    toFlush.add(data.get(s.getHash()));
                 }
-
                 data.delete(s.getHash());
             }
-
             index.delete(number);
-            number--;
         }
+
+        LOG.info("Add to flushQueue, current size: {} ", toFlush.size());
     }
+
 }

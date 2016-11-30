@@ -2,18 +2,23 @@ package edu.suda.ada.handler;
 
 import edu.suda.ada.dao.AccountTemplate;
 import org.ethereum.core.BlockSummary;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.program.InternalTransaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class AccountProcessor extends Processor {
-
+    private final Logger LOG = LoggerFactory.getLogger("processor");
     private AccountTemplate accountTemplate;
 
     public AccountProcessor(AccountTemplate accountTemplate){
@@ -22,11 +27,21 @@ public class AccountProcessor extends Processor {
 
     @Override
     public void processBlock(BlockSummary blockSummary) {
-        accountTemplate.startTracking();
-        rewardMinderAndUncles(blockSummary.getRewards());
 
+        long startTime = System.currentTimeMillis();
+        accountTemplate.startTracking();
+
+        long start = System.currentTimeMillis();
+        rewardMinderAndUncles(blockSummary.getRewards());
         blockSummary.getSummaries().forEach(this::processTransaction);
+        long end = System.currentTimeMillis();
+
         accountTemplate.commit();
+        long endTime = System.currentTimeMillis();
+        if (endTime - startTime > 5){
+            LOG.warn("Block number {}, Account Processor takes : {}  loop takes : {}",
+                    blockSummary.getBlock().getNumber(), endTime - startTime, end - start);
+        }
     }
 
     /**
@@ -36,7 +51,7 @@ public class AccountProcessor extends Processor {
     private void rewardMinderAndUncles(Map<byte[], BigInteger> rewards){
         for (byte[] addr : rewards.keySet()){
             String address = ByteUtil.toHexString(addr);
-            createNewOrUpdate(address, rewards.get(addr).doubleValue());
+            accountTemplate.addBalance(address, rewards.get(addr).doubleValue());
         }
     }
 
@@ -78,11 +93,11 @@ public class AccountProcessor extends Processor {
      * @param address
      */
     private void increaseNonce(byte[] address){
-        accountTemplate.increaseNonce(ByteUtil.toHexString(address), true);
+        accountTemplate.increaseNonce(ByteUtil.toHexString(address));
     }
 
     private void spendGas(String sender, double fee) {
-        accountTemplate.addBalance(sender, -fee, true);
+        accountTemplate.addBalance(sender, -fee);
     }
 
     /**
@@ -93,8 +108,7 @@ public class AccountProcessor extends Processor {
         //if the value is greater than 0
         if (ByteUtil.bytesToBigInteger(tx.getValue()).compareTo(new BigInteger("0")) > 0){
             accountTemplate.addBalance(ByteUtil.toHexString(tx.getSender()),
-                    ByteUtil.bytesToBigInteger(tx.getValue()).negate().doubleValue(), true);
-
+                    ByteUtil.bytesToBigInteger(tx.getValue()).negate().doubleValue());
 
             String receiver;
 
@@ -105,7 +119,7 @@ public class AccountProcessor extends Processor {
             }
 
             double value = ByteUtil.bytesToBigInteger(tx.getValue()).doubleValue();
-            createNewOrUpdate(receiver, value);
+            accountTemplate.addBalance(receiver, value);
         }
     }
 
@@ -119,29 +133,15 @@ public class AccountProcessor extends Processor {
         long gas = ByteUtil.byteArrayToLong(transaction.getGasLimit()) * ByteUtil.byteArrayToLong(transaction.getGasPrice());
 
         //subtract the gas and value from sender's account
-        accountTemplate.addBalance(sender, -(value.doubleValue() + gas), true);
+        accountTemplate.addBalance(sender, -(value.doubleValue() + gas));
 
         String receiver = ByteUtil.toHexString(transaction.getReceiveAddress());
-        createNewOrUpdate(receiver, value.doubleValue());
+        accountTemplate.addBalance(receiver, value.doubleValue());
     }
 
     private void deleteAccounts(List<DataWord> deletions){
         for (DataWord account : deletions){
-            accountTemplate.delete(account.asString(), true);
-        }
-    }
-
-    /**
-     * create a new account with the initial balance if the account is not exist.
-     * update it's balance otherwise
-     * @param address address of the account that needs to be modified.
-     * @param balance balance in this modification
-     */
-    private void createNewOrUpdate(final String address, double balance){
-        if (accountTemplate.exist(address)){
-            accountTemplate.addBalance(address, balance, true);
-        }else {
-            accountTemplate.createAccount(address, balance, false, null);
+            accountTemplate.delete(account.asString());
         }
     }
 }
