@@ -1,21 +1,21 @@
-EthereumSQL
+EtherSQL
 ----
 
-EthereumSQL is a query layer for Ethereum blockchain, written in Java and backed by MongoDB. 
+EtherSQL is a query layer for Ethereum blockchain, written in Java and backed by MongoDB. 
 
 [![Build Status](https://travis-ci.org/LeonSpark/ethereumj-sql.svg?branch=master)](https://travis-ci.org/LeonSpark/ethereumj-sql)
 
 It provides a RESTful API that is ideal for building scalable web applications or analyzing blockchain data.
-EthereumSQL is designed to be fully compatible with [Ethereum](https://github.com/ethereum).
+EtherSQL is designed to be fully compatible with [Ethereum](https://github.com/ethereum).
 
-For much of the core protocol logic, EthereumSQL makes use of the [EthereumJ](https://github.com/ethereum/ethereumj)
+For much of the core protocol logic, EtherSQL makes use of the [EthereumJ](https://github.com/ethereum/ethereumj)
 library.
 
-EthereumSQL was built at [Advanced Data Analytics Lab](http://ada.suda.edu.cn), with the goal of providing
+EtherSQL was built at [Advanced Data Analytics Lab](http://ada.suda.edu.cn), with the goal of providing
 a data query infrastructure on Ethereum. It is currently in very alpha beta, and not recommended for production use until it has received sufficient testing.
 
 ## Installation
-
+Under the root directory of the project, run the command below to install EtherSQL as a maven dependency.
 `mvn install`
 
 ## Usage
@@ -27,17 +27,7 @@ a data query infrastructure on Ethereum. It is currently in very alpha beta, and
             <groupId>edu.suda.ada</groupId>
             <artifactId>ethersql</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+ </dependency>
 ```
 
 
