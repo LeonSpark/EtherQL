@@ -1,41 +1,55 @@
-EtherSQL
+EtherQL
 ----
 
-EtherSQL is a query layer for Ethereum blockchain, written in Java and backed by MongoDB. 
+EtherQL is a query layer for Ethereum blockchain, written in Java and backed by MongoDB. 
 
 [![Build Status](https://travis-ci.org/LeonSpark/ethereumj-sql.svg?branch=master)](https://travis-ci.org/LeonSpark/ethereumj-sql)
 
 It provides a RESTful API that is ideal for building scalable web applications or analyzing blockchain data.
-EtherSQL is designed to be fully compatible with [Ethereum](https://github.com/ethereum).
+EtherQL is designed to be fully compatible with [Ethereum](https://github.com/ethereum).
 
-For much of the core protocol logic, EtherSQL makes use of the [EthereumJ](https://github.com/ethereum/ethereumj)
+For much of the core protocol logic, EtherQL makes use of the [EthereumJ](https://github.com/ethereum/ethereumj)
 library.
 
-EtherSQL was built at [Advanced Data Analytics Lab](http://ada.suda.edu.cn), with the goal of providing
+EtherQL was built at [Advanced Data Analytics Lab](http://ada.suda.edu.cn), with the goal of providing
 a data query infrastructure on Ethereum. It is currently in very alpha beta, and not recommended for production use until it has received sufficient testing.
 
+##Prerequisites
+1. JDK 1.8.0 or later.
+    TODO
+2. Maven 3.0 or later.
+    TODO
+3. MongoDB 3.2 or later.
+Current version of this project relies on [MongoDB](https://www.mongodb.com/) as the underlying data storage.
+Install MongoDB according to this [documentation](https://docs.mongodb.com/manual/installation/). 
+
 ## Installation
-Under the root directory of the project, run the command below to install EtherSQL as a maven dependency.
+
+Note: for spring developers, you can add EtherQL as a maven dependency by installing to your local maven repo.
+
 `mvn install`
 
-## Usage
+### Usage
 
 * Add the maven dependency to your spring applications.
 
 ```
-<dependency>
+        <dependency>
             <groupId>edu.suda.ada</groupId>
             <artifactId>ethersql</artifactId>
             <version>1.0-SNAPSHOT</version>
- </dependency>
+        </dependency>
 ```
 
-
-* Create a bean to activate the EtherSQL
+* Create a bean to activate the EtherQL
 
 `<bean id="starter" class="edu.suda.ada.config.AppConfig"/>`
 
-* Configuration
+## If you want to run a standalone application that just sync data from the blockchain.
+
+At the root directory of this project.
+
+Configuration
 
 Add ethersql.conf file to your classpath to specify the Ethereum raw data location and MongoDB properties.
 ```
@@ -48,4 +62,4 @@ data.location=/home/leon/data/ethereum
 
 ## License
 
-EthereumSQL is licensed under [Apache License 2.0](http://www.apache.org/licenses/).
+EtherQL is licensed under [Apache License 2.0](http://www.apache.org/licenses/).
