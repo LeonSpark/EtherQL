@@ -28,6 +28,8 @@ public interface TransactionAPI {
      *       Range query api
      ====================================================*/
     List<SimpleTransaction> getTransactionsOrderedByValue(int offset, int limit, boolean asc);
+    List<SimpleTransaction> getTransactionsByValue(double min, double max);
+
     List<SimpleTransaction> getTransactionsWithValueBetween(double min, double max, boolean asc);
     List<SimpleTransaction> getTransactionsBetweenBlocks(long start, long end);
 

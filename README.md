@@ -16,9 +16,9 @@ a data query infrastructure on Ethereum. It is currently in very alpha beta, and
 
 ##Prerequisites
 1. JDK 1.8.0 or later.
-    TODO
-2. Maven 3.0 or later.
-    TODO
+    
+2. Maven 3.3.0 or later.
+    
 3. MongoDB 3.2 or later.
 Current version of this project relies on [MongoDB](https://www.mongodb.com/) as the underlying data storage.
 Install MongoDB according to this [documentation](https://docs.mongodb.com/manual/installation/). 
@@ -45,13 +45,16 @@ Note: for spring developers, you can add EtherQL as a maven dependency by instal
 
 `<bean id="starter" class="edu.suda.ada.config.AppConfig"/>`
 
-## If you want to run a standalone application that just sync data from the blockchain.
+## Running a standalone App
 
-At the root directory of this project.
+At the root directory of this project, run 
 
-Configuration
+`mvn spring-boot:run`
 
-Add ethersql.conf file to your classpath to specify the Ethereum raw data location and MongoDB properties.
+
+##Configuration
+
+Add etherql.conf file to your classpath to specify the Ethereum raw data location and MongoDB properties.
 ```
 mongo.host=127.0.0.1
 mongo.port=27017
@@ -63,3 +66,7 @@ data.location=/home/leon/data/ethereum
 ## License
 
 EtherQL is licensed under [Apache License 2.0](http://www.apache.org/licenses/).
+
+## TODO list
+
+## 

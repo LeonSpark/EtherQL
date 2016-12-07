@@ -7,7 +7,7 @@ import edu.suda.ada.core.SimpleBlock;
 public interface BlockTemplate{
     boolean exist(SimpleBlock block);
     SimpleBlock getBlock(Long number);
-    void saveBlock(SimpleBlock block);
+    int saveBlock(SimpleBlock block);
     void deleteBlock(SimpleBlock block);
     void updateBlock(SimpleBlock block);
 }

@@ -16,8 +16,7 @@ public class EthereumListener extends EthereumListenerAdapter {
     private final Logger logger = LoggerFactory.getLogger("listener");
     Ethereum ethereum;
 
-    public static final int MAX_QUEUE_SIZE = Short.MAX_VALUE;
-    private static long counter = 0;;
+    private static long counter = 0;
     private boolean syncDone = false;
     private BlockCache container;
 

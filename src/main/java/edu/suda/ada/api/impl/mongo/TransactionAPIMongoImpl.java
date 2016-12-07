@@ -6,9 +6,9 @@ import edu.suda.ada.core.SimpleTransaction;
 import edu.suda.ada.core.TopKAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -17,12 +17,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+
 public class TransactionAPIMongoImpl implements TransactionAPI {
     public final String TRANSACTION_COLLECTION = "transactions";
     public final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
     protected MongoTemplate mongoTemplate;
+
+    public TransactionAPIMongoImpl(MongoTemplate mongoTemplate){
+        this.mongoTemplate = mongoTemplate;
+    }
 
     private EthersqlConfig config = EthersqlConfig.getDefaultConfig();
 
@@ -44,14 +50,14 @@ public class TransactionAPIMongoImpl implements TransactionAPI {
         if (blockNumber < 0) {
             return null;
         }
-        return mongoTemplate.find(Query.query(Criteria.where("blockHash").is(blockNumber)),
+        return mongoTemplate.find(Query.query(Criteria.where("n").is(blockNumber)),
                 SimpleTransaction.class, TRANSACTION_COLLECTION);
     }
 
     @Override
     public List<SimpleTransaction> getTransactionsBySender(String sender) {
         Query query = Query.query(Criteria.where("from").is(sender));
-        return validateAndExecute(sender, query);
+        return execute(query);
     }
 
     @Override
@@ -87,6 +93,16 @@ public class TransactionAPIMongoImpl implements TransactionAPI {
     }
 
     @Override
+    public List<SimpleTransaction> getTransactionsByValue(double min, double max) {
+        Query query = new Query();
+        Criteria criteria = new Criteria();
+        criteria.andOperator(Criteria.where("value").gt(min), Criteria.where("value").lt(max));
+        query.addCriteria(criteria);
+        return execute(query);
+    }
+
+
+    @Override
     public List<SimpleTransaction> getTransactionsWithValueBetween(double min, double max, boolean asc) {
         Query query = new Query();
         Criteria criteria = new Criteria();
@@ -110,18 +126,11 @@ public class TransactionAPIMongoImpl implements TransactionAPI {
         return null;
     }
 
-    private boolean validateHash(String hash) {
-        boolean result = hash != null && hash.startsWith("0x");
-        if (!result) LOG.error("not a valid address");
-        return result;
-    }
-
     private List<SimpleTransaction> execute(Query query) {
         return mongoTemplate.find(query, SimpleTransaction.class, TRANSACTION_COLLECTION);
     }
 
     private List<SimpleTransaction> validateAndExecute(String address, Query query) {
-        if (!validateHash(address)) return null;
         return execute(query);
     }
 

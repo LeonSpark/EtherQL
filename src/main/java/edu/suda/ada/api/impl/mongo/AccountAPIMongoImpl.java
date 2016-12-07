@@ -14,8 +14,11 @@ public class AccountAPIMongoImpl implements AccountAPI {
 
     public final String ACCOUNT_COLLECTION = "accounts";
 
-    @Autowired
     protected MongoTemplate mongoTemplate;
+
+    public AccountAPIMongoImpl(MongoTemplate mongoTemplate){
+        this.mongoTemplate = mongoTemplate;
+    }
 
     @Override
     public SimpleAccount getAccountByAddress(String address) {

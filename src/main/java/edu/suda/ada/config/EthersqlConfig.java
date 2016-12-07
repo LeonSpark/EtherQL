@@ -22,9 +22,10 @@ public class EthersqlConfig {
     private Config config;
     private ClassLoader classLoader;
 
-    public static EthersqlConfig getDefaultConfig(){
+    public static EthersqlConfig getDefaultConfig() {
         return ethersqlConfig;
     }
+
     private String mongoHost = null;
     private int mongoPort = 0;
     private String mongoDatabase = null;
@@ -34,7 +35,7 @@ public class EthersqlConfig {
     private String valueReduce = null;
 
 
-    public EthersqlConfig(Config config){
+    public EthersqlConfig(Config config) {
         Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
         logger.info("loading java system properties");
         Config userConfig = ConfigFactory.parseResources("ethersql.conf");
@@ -48,29 +49,30 @@ public class EthersqlConfig {
         validateConfig();
     }
 
-    public EthersqlConfig(String configLocation){
+    public EthersqlConfig(String configLocation) {
         this(ConfigFactory.parseResources(configLocation));
     }
 
-    public EthersqlConfig(File configFile){
+    public EthersqlConfig(File configFile) {
         this(ConfigFactory.parseFile(configFile));
     }
 
-    public EthersqlConfig(){
+    public EthersqlConfig() {
         this(ConfigFactory.empty());
     }
 
-    public Config getConfig(){
+    public Config getConfig() {
         return config;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface ValidateMe{}
+    public @interface ValidateMe {
+    }
 
-    private void validateConfig(){
-        for (Method method : getClass().getMethods()){
-            if (method.isAnnotationPresent(ValidateMe.class)){
+    private void validateConfig() {
+        for (Method method : getClass().getMethods()) {
+            if (method.isAnnotationPresent(ValidateMe.class)) {
                 try {
                     method.invoke(this);
                 } catch (Exception e) {
@@ -81,12 +83,12 @@ public class EthersqlConfig {
     }
 
     @ValidateMe
-    public String getDefaultDB(){
+    public String getDefaultDB() {
         return config.getString("default.db");
     }
 
     public String getMongoHost() {
-        return mongoHost == null ? config.getString("mongo.host") : mongoHost ;
+        return mongoHost == null ? config.getString("mongo.host") : mongoHost;
     }
 
     public void setMongoHost(String mongoHost) {
@@ -109,18 +111,18 @@ public class EthersqlConfig {
         this.mongoDatabase = mongoDatabase;
     }
 
-    private String load(String location){
+    private String load(String location) {
         InputStreamReader isr = new InputStreamReader(classLoader.getResourceAsStream(location));
         StringBuffer content = new StringBuffer();
         char[] buffer = new char[4096];
         try {
-            while (isr.read(buffer) > 0){
+            while (isr.read(buffer) > 0) {
                 content.append(buffer);
             }
             return content.toString();
         } catch (IOException e) {
             throw new ResourceNotFoundException("Resource not found : " + location, e);
-        }finally {
+        } finally {
             try {
                 isr.close();
             } catch (IOException e) {
@@ -130,7 +132,7 @@ public class EthersqlConfig {
     }
 
     @ValidateMe
-    public String getFrequencyMap(){
+    public String getFrequencyMap() {
         if (frequencyMap != null) return frequencyMap;
         String location = config.getString("analysis.frequency.map");
         logger.info(location);
@@ -138,20 +140,21 @@ public class EthersqlConfig {
     }
 
     @ValidateMe
-    public String getFrequencyReduce(){
+    public String getFrequencyReduce() {
         if (frequencyReduce != null) return frequencyReduce;
         String location = config.getString("analysis.frequency.reduce");
         return frequencyReduce = load(location);
     }
 
     @ValidateMe
-    public String getValueMap(){
+    public String getValueMap() {
         if (valueMap != null) return valueMap;
         String location = config.getString("analysis.value.map");
         return valueMap = load(location);
     }
+
     @ValidateMe
-    public String getValueReduce(){
+    public String getValueReduce() {
         if (valueReduce != null) return valueReduce;
         String location = config.getString("analysis.value.reduce");
         return valueReduce = load(location);

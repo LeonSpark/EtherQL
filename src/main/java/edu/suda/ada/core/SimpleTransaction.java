@@ -20,7 +20,7 @@ public class SimpleTransaction extends SimpleBasicTransaction {
     private long gasLeftover;
     private String result;
 
-    private List<SimpleInternalTransaction> internalTransactions = new ArrayList<>();
+    private List<SimpleInternalTransaction> internalTransaction = new ArrayList<>();
 
     public SimpleTransaction(TransactionExecutionSummary summary){
         setTransactionExecutionSummary(summary);
@@ -72,12 +72,12 @@ public class SimpleTransaction extends SimpleBasicTransaction {
         this.result = result;
     }
 
-    public List<SimpleInternalTransaction> getInternalTransactions() {
-        return internalTransactions;
+    public List<SimpleInternalTransaction> getInternalTransaction() {
+        return internalTransaction;
     }
 
-    public void setInternalTransactions(List<SimpleInternalTransaction> internalTransactions) {
-        this.internalTransactions = internalTransactions;
+    public void setInternalTransaction(List<SimpleInternalTransaction> internalTransaction) {
+        this.internalTransaction = internalTransaction;
     }
 
     public void setTransactionExecutionSummary(TransactionExecutionSummary summary){
@@ -91,7 +91,7 @@ public class SimpleTransaction extends SimpleBasicTransaction {
 
         List<InternalTransaction> internalTransactionList = summary.getInternalTransactions();
         if (internalTransactionList != null && internalTransactionList.size() > 0){
-            internalTransactions.addAll(summary.getInternalTransactions()
+            internalTransaction.addAll(summary.getInternalTransactions()
                     .stream().map(SimpleInternalTransaction::new).collect(Collectors.toList()));
         }
     }

@@ -2,34 +2,33 @@ package edu.suda.ada.dao.impl.mongo;
 
 import edu.suda.ada.core.SimpleAccount;
 import edu.suda.ada.dao.AccountTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.Map;
 
 public class AccountTemplateMongoImpl implements AccountTemplate {
     public static final String ACCOUNT_COLLECTION = "accounts";
-    private MongoTemplate mongoTemplate;
-    @Autowired
-    private MongoDbFactory factory;
-    private BulkOperations bulkOperations;
+    private MongoOperations mongoTemplate;
 
-    private ExecutorService executorService;
-
-    public AccountTemplateMongoImpl(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
-        executorService = Executors.newFixedThreadPool(5);
+    public AccountTemplateMongoImpl(MongoTemplate template){
+        this.mongoTemplate = template;
     }
 
     @Override
-    public void delete(String address) {
-        bulkOperations.remove(Query.query(Criteria.where("address").is(address)));
+    public void delete(List<String> addresses) {
+        BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.ORDERED, ACCOUNT_COLLECTION);
+
+        for (String address : addresses){
+            bulkOperations.remove(Query.query(Criteria.where("address").is(address)));
+        }
+
+        bulkOperations.execute();
     }
 
     @Override
@@ -38,46 +37,35 @@ public class AccountTemplateMongoImpl implements AccountTemplate {
         update.inc("balance", value);
         update.set("isContract", false);
         update.set("code", "");
-        bulkOperations.upsert(Query.query(Criteria.where("address").is(address)),
-                    update);
+        mongoTemplate.upsert(Query.query(Criteria.where("address").is(address)),
+                    update, ACCOUNT_COLLECTION);
     }
 
     @Override
     public void increaseNonce(String address) {
-        Update update = new Update();
-        update.inc("nonce", 1);
+        Update update = new Update().inc("nonce", 1);
         Query query = Query.query(Criteria.where("address").is(address));
-        bulkOperations.upsert(query, update);
+        mongoTemplate.upsert(query, update, ACCOUNT_COLLECTION);
     }
 
     @Override
     public void createAccount(String address, double balance, boolean isContract, String code) {
         SimpleAccount account = new SimpleAccount(address, balance, isContract, code);
         account.setNonce(0);
-        bulkOperations.insert(account);
+        mongoTemplate.insert(account, ACCOUNT_COLLECTION);
     }
 
     @Override
-    public void commit() {
-//        executorService.execute(task);
-        bulkOperations.execute();
-    }
-
-    @Override
-    public void startTracking() {
-        mongoTemplate = new MongoTemplate(factory);
-        bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.ORDERED, ACCOUNT_COLLECTION);
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return mongoTemplate.exists(Query.query(Criteria.where("balance").gt(0)), "accounts");
-    }
-
-    private Runnable task = new Runnable() {
-        @Override
-        public void run() {
-            bulkOperations.execute();
+    public int commit(Map<String, Double> changes) {
+        BulkOperations bulk = mongoTemplate.bulkOps(BulkOperations.BulkMode.ORDERED, ACCOUNT_COLLECTION);
+        for (String address : changes.keySet()){
+            Update update = new Update();
+            update.inc("balance", changes.get(address));
+            update.set("isContract", false);
+            bulk.upsert(Query.query(Criteria.where("address").is(address)),
+                    update);
         }
-    };
+        bulk.execute();
+        return 0;
+    }
 }

@@ -1,31 +1,18 @@
 package edu.suda.ada.config;
 
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import edu.suda.ada.core.*;
-import edu.suda.ada.handler.AccountProcessor;
-import edu.suda.ada.handler.BlockProcessor;
-import edu.suda.ada.handler.Processor;
-import edu.suda.ada.handler.TransactionProcessor;
-import edu.suda.ada.dao.AccountTemplate;
-import edu.suda.ada.dao.BlockTemplate;
-import edu.suda.ada.dao.TransactionTemplate;
-import edu.suda.ada.dao.impl.mongo.AccountTemplateMongoImpl;
-import edu.suda.ada.dao.impl.mongo.BlockTemplateMongoImpl;
-import edu.suda.ada.dao.impl.mongo.TransactionTemplateMongoImpl;
+import edu.suda.ada.api.BlockAPI;
+import edu.suda.ada.api.impl.mongo.BlockAPIMongoImpl;
+import edu.suda.ada.core.BlockCache;
+import edu.suda.ada.dao.MongoTemplateFactory;
 import edu.suda.ada.ethereum.EthereumBean;
+import edu.suda.ada.handler.AccountObserver;
+import edu.suda.ada.handler.BlockObserver;
+import edu.suda.ada.handler.TransactionObserver;
 import org.springframework.context.annotation.*;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-
-/**
- * Created by LiYang on 2016/11/22.
- */
 
 @Configuration
 @ComponentScan("edu.suda.ada")
@@ -33,111 +20,68 @@ public class AppConfig {
 
     private EthersqlConfig config = EthersqlConfig.getDefaultConfig();
 
-//    @Bean
-//    @Lazy
-//    @Scope("prototype")
-//    public MongoTemplate mongoTemplate(){
-//
-//        MappingMongoConverter converter =
-//                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
-//        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
-//        return new MongoTemplate(mongoDbFactory(), converter);
-//    }
-
     @Bean
     @Lazy
-    public MongoDbFactory mongoDbFactory(){
+    public MongoDbFactory mongoDbFactory() {
         return new SimpleMongoDbFactory(mongoClient(), config.getMongoDatabase());
     }
 
     @Bean
     @Lazy
-    public MongoClient mongoClient(){
+    public MongoClient mongoClient() {
         return new MongoClient(config.getMongoHost(), config.getMongoPort());
     }
 
     @Bean
-    public AccountTemplate accountTemplate(){
-        MappingMongoConverter converter =
-                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
-        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
-
-        String defaultDb = config.getDefaultDB();
-
-        switch (defaultDb){
-            case "mongo" : return new AccountTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
-            case "mysql" : return new AccountTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
-            default: throw new RuntimeException("db should be mysql or mongo");
-        }
+    public MongoTemplateFactory mongoTemplateFactory() {
+        return new MongoTemplateFactory(mongoDbFactory());
     }
 
     @Bean
-    public TransactionTemplate transactionTemplate(){
-        MappingMongoConverter converter =
-                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
-        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
-        String defaultDb = config.getDefaultDB();
-        switch (defaultDb){
-            case "mongo" : return new TransactionTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
-            case "mysql" : return new TransactionTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
-            default: throw new RuntimeException("db should be mysql or mongo");
-        }
+    @Scope("prototype")
+    public BlockObserver blockObserver() {
+        return new BlockObserver(mongoTemplateFactory());
     }
 
     @Bean
-    public BlockTemplate blockTemplate(){
-        MappingMongoConverter converter =
-                new MappingMongoConverter(mongoDbFactory(), new MongoMappingContext());
-        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
-        String defaultDb = config.getDefaultDB();
-        switch (defaultDb){
-            case "mongo" : return new BlockTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
-            case "mysql" : return new BlockTemplateMongoImpl(new MongoTemplate(mongoDbFactory(), converter));
-            default: throw new RuntimeException("db should be mysql or mongo");
-        }
+    @Scope("prototype")
+    public TransactionObserver transactionObserver() {
+        return new TransactionObserver(mongoTemplateFactory());
     }
 
     @Bean
-    public BlockProcessor blockProcessor(){
-        return new BlockProcessor(blockTemplate());
+    @Scope("prototype")
+    public AccountObserver accountObserver() {
+        return new AccountObserver(mongoTemplateFactory());
     }
 
     @Bean
-    public TransactionProcessor transactionProcessor(){
-        return new TransactionProcessor(transactionTemplate());
-    }
-
-    @Bean
-    public AccountProcessor accountProcessor(){
-        return new AccountProcessor(accountTemplate());
-    }
-
-    @Bean
-    public Processor processor(){
-        Processor blockProcessor = blockProcessor();
-        Processor transactionProcessor =transactionProcessor();
-        Processor accountProcessor = accountProcessor();
-        transactionProcessor.setSuccessor(accountProcessor);
-        blockProcessor.setSuccessor(transactionProcessor);
-        return blockProcessor;
+    @Scope("prototype")
+    public BlockAPI blockAPI() {
+        return new BlockAPIMongoImpl(new MongoTemplate(mongoDbFactory()));
     }
 
     @Bean
     @Scope("singleton")
-    public BlockCache blockCache(){
-        return new BlockCache(processor());
+    public BlockCache blockCache() {
+        BlockCache blockCache = new BlockCache();
+
+        blockCache.addObserver(transactionObserver());
+        blockCache.addObserver(accountObserver());
+        blockCache.addObserver(blockObserver());
+        return blockCache;
     }
 
     @Bean
     @Scope("singleton")
-    public EthereumBean ethereumBean(){
+    public EthereumBean ethereumBean() {
         EthereumBean ethereumBean = new EthereumBean(blockCache());
         ethereumBean.start();
         return ethereumBean;
     }
 
     @Bean
-    public Initializer initializer(){
-        return new Initializer(accountTemplate());
+    public Initializer initializer() {
+        return new Initializer(new MongoTemplate(mongoDbFactory()));
     }
 }

@@ -21,6 +21,18 @@ public class SimpleBasicTransaction {
 
     public SimpleBasicTransaction() {}
 
+    public SimpleBasicTransaction(String hash, long nonce, String blockHash, String from, String to, double value, long gasPrice, long gasLimit, String data) {
+        this.hash = hash;
+        this.nonce = nonce;
+        this.blockHash = blockHash;
+        this.from = from;
+        this.to = to;
+        this.value = value;
+        this.gasPrice = gasPrice;
+        this.gasLimit = gasLimit;
+        this.data = data;
+    }
+
     public SimpleBasicTransaction(Transaction transaction){
         setTransaction(transaction);
     }

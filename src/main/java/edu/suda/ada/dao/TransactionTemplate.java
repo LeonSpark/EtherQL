@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface TransactionTemplate {
     void saveTransaction(SimpleTransaction transaction);
-    void saveTransactions(List<SimpleTransaction> transactions);
+    int saveTransactions(List<SimpleTransaction> transactions);
     void deleteTransaction(SimpleTransaction transaction);
     void updateTransaction(SimpleTransaction transaction);
 }

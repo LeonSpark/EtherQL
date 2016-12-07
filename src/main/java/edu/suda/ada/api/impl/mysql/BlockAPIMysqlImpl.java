@@ -36,4 +36,9 @@ public class BlockAPIMysqlImpl implements BlockAPI {
     public List<SimpleBlock> getBlocksByTimestamp(long start, long end) {
         return null;
     }
+
+    @Override
+    public int getBlockMinedByMiner(String miner) {
+        return 0;
+    }
 }

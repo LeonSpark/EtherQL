@@ -8,6 +8,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 
 public class BlockTemplateMongoImpl implements BlockTemplate{
     public  final String BLOCK_COLLECTION = "blocks";
@@ -29,8 +32,9 @@ public class BlockTemplateMongoImpl implements BlockTemplate{
     }
 
     @Override
-    public void saveBlock(SimpleBlock block) {
+    public int saveBlock(SimpleBlock block) {
         mongoTemplate.insert(block, BLOCK_COLLECTION);
+        return 1;
     }
 
     @Override

@@ -25,4 +25,5 @@ public interface BlockAPI {
      ====================================================*/
     List<SimpleBlock> getBlocksByRange(int start, int end);
     List<SimpleBlock> getBlocksByTimestamp(long start, long end);
+    int getBlockMinedByMiner(String miner);
 }

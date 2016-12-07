@@ -1,40 +1,55 @@
 package edu.suda.ada.core;
 
-import edu.suda.ada.handler.Processor;
-import org.apache.commons.logging.Log;
+import edu.suda.ada.handler.AbstractObserver;
+import edu.suda.ada.handler.Observer;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockSummary;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class BlockCache {
-    private final Logger LOG = LoggerFactory.getLogger("cache");
+    private final Logger logger = LoggerFactory.getLogger("cache");
 
     private KeyValueSource<Long, List<BlockState>> index;
     private KeyValueSource<String, BlockSummary> data;
     private BlockingQueue<BlockSummary> blockQueue = new LinkedBlockingDeque(Integer.MAX_VALUE);
     private BlockingQueue<BlockSummary> toFlush = new LinkedBlockingDeque(Integer.MAX_VALUE);
     private BlockState bestBlock;
-    private Processor blockProcessor;
+    private List<AbstractObserver> observers = new ArrayList<>();
+    public static int FLUSH_SIZE_LIMIT = 12;
 
-    public static int FLUSH_SIZE_LIMIT = 5;
     private Thread blockCacheService;
     private Runnable cacheBlockTask = () -> cacheBlock();
     private Thread blockProcessService;
     private Runnable blockProcessTask = () -> processBlock();
 
-    public BlockCache(Processor blockProcessor){
+
+    public BlockCache(){
         index = new KeyValueSource<>(new ConcurrentHashMap<>());
         data = new KeyValueSource<>(new ConcurrentHashMap<>());
-        this.blockProcessor = blockProcessor;
         init();
+    }
+
+    public void addObserver(AbstractObserver observer){
+        observers.add(observer);
+    }
+
+    public void deleteObserver(Observer observer){
+        observers.remove(observer);
+    }
+
+    private void notifyObserver(BlockSummary blockSummary){
+        for (AbstractObserver observer : observers){
+           observer.update(blockSummary);
+        }
     }
 
     private void init(){
@@ -50,10 +65,10 @@ public class BlockCache {
      * @param summary
      */
     public void add(BlockSummary summary){
-        try {
-            blockQueue.put(summary);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        blockQueue.add(summary);
+        
+        if (blockQueue.size() > 100){
+            logger.warn("BlockQueue size : {}", blockQueue.size());
         }
     }
 
@@ -74,11 +89,11 @@ public class BlockCache {
                 data.put(state.getHash(), summary);
 
                 if (!index.exist(block.getNumber())){
-                    LOG.info("Adding best block to block cache, number: {} ", state.getNumber());
+                    logger.info("Adding best block to block cache, number: {} ", state.getNumber());
 
                     index.put(block.getNumber(), Collections.singletonList(state));
                 } else {
-                    LOG.warn("Forking occurs in block number : {}", state.getNumber());
+                    logger.warn("Forking occurs in block number : {}", state.getNumber());
 
                     bestBlock.setMainChain(false);
                     rebuildBranch(state);
@@ -101,10 +116,10 @@ public class BlockCache {
 
                 BlockSummary block = toFlush.take();
                 long start = System.currentTimeMillis();
-                blockProcessor.processBlock(block);
+                notifyObserver(block);
                 long end = System.currentTimeMillis();
 
-                LOG.warn("process block : {}, takes : {}  (flush queue size: {})",
+                logger.warn("process block : {}, takes : {}  (flush queue size: {})",
                         block.getBlock().getNumber(),  end - start, toFlush.size());
 
             } catch (InterruptedException e) {
@@ -185,7 +200,7 @@ public class BlockCache {
             index.delete(number);
         }
 
-        LOG.info("Add to flushQueue, current size: {} ", toFlush.size());
+        logger.info("Add to flushQueue, current size: {} ", toFlush.size());
     }
 
 }
