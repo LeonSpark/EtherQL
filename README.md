@@ -68,5 +68,6 @@ data.location=/home/leon/data/ethereum
 EtherQL is licensed under [Apache License 2.0](http://www.apache.org/licenses/).
 
 ## TODO list
-
+1. Add Fast sync mechainism.
+2. Add mysql support.
 ## 
